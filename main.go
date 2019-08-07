@@ -1,9 +1,9 @@
 // This is for accessing The Arkansas Department of Education Cognos system.
 // it might also work for other Cognos installations. It can list directories.
-// and run/download reports (that have already been built) syncronously to CSV strings.
+// and run/download reports (that have already been built) synchronously to CSV strings.
 // It does not support anything other than default parameters, so save default parameters
 // or build reports that don't have parameters. Basically everything panics on failure.
-// I use a helper function called Try() to handle these pannics (http://github.com/9072997/jgh).
+// I use a helper function called Try() to handle these panics (http://github.com/9072997/jgh).
 // This library would not have been possible without the code generously open sourced by
 // Scott Organ (https://github.com/scottorgan/cognosant).
 package cognos
@@ -80,10 +80,11 @@ func (t FolderEntryType) MarshalJSON() ([]byte, error) {
 // retryDelay is the number of seconds before a failed request will be retried.
 // It is also the polling interval when waiting for a report to finish.
 // retryCount is the number of times a failed request will be retried.
+// A retryCount of -1 will retry forever.
 // Polling unfinished reports is unaffected by this.
 // httpTimeout is the number seconds before giving up on a Cognos HTTP request.
-// concurentRequests limits the maximum number of requests going at once.
-func MakeInstance(user, pass, url, dsn string, retryDelay uint, retryCount int, httpTimeout uint, concurentRequests uint) (c CognosInstance) {
+// concurrentRequests limits the maximum number of requests going at once.
+func MakeInstance(user, pass, url, dsn string, retryDelay uint, retryCount int, httpTimeout uint, concurrentRequests uint) (c CognosInstance) {
 	c = CognosInstance{
 		User:         user,
 		Pass:         pass,
@@ -91,7 +92,7 @@ func MakeInstance(user, pass, url, dsn string, retryDelay uint, retryCount int, 
 		DSN:          dsn,
 		RetryDelay:   retryDelay,
 		RetryCount:   retryCount,
-		httpLockPool: semaphore.NewWeighted(int64(concurentRequests)),
+		httpLockPool: semaphore.NewWeighted(int64(concurrentRequests)),
 	}
 
 	// make a new cookie jar
@@ -235,7 +236,7 @@ func (c CognosInstance) FolderEntryFromPath(path []string) FolderEntry {
 // provided via the "link" parameter. The response body is returned as a string.
 // Any errors (including a non-200 response) will cause this function to panic.
 func (c CognosInstance) Request(method string, link string, reqBody string) (respBody string) {
-	// limit concurent requests
+	// limit concurrent requests
 	// background means don't give up waiting for lock
 	err := c.httpLockPool.Acquire(context.Background(), 1)
 	jgh.PanicOnErr(err)
@@ -300,8 +301,8 @@ func (c *CognosInstance) findFolderRoots() (publicFolderID string, myFolderID st
 	return
 }
 
-// BUG(jon): This just panics on questionable charicters.
-// eventuially it would be nice to actuially escape these.
+// BUG(jon): This just panics on questionable characters.
+// eventuially it would be nice to actually escape these.
 // BUG(jon): this is unused
 func cognosEscape(s string) string {
 	if strings.ContainsAny(s, `"':\`) {
@@ -316,7 +317,7 @@ func cognosEscape(s string) string {
 func (c CognosInstance) LsFolder(id string) map[string]FolderEntry {
 	respHTML := c.Request("GET", folderLinkFromID(id), "")
 
-	// get all links in the main table. These corrispond to folder entries.
+	// get all links in the main table. These correspond to folder entries.
 	docTree, err := htmlquery.Parse(strings.NewReader(respHTML))
 	jgh.PanicOnErr(err)
 	query := `//td[@class="tableText"]/a]`
