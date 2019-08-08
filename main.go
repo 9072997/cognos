@@ -12,7 +12,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -261,11 +260,8 @@ func (c CognosInstance) Request(method string, link string, reqBody string) (res
 
 		// check HTTP response code
 		if resp.StatusCode == 401 {
-			// since cognos gives us random 401s in normal operation we don't panic.
-			// it produces a lot of ugly debug output.
-			log.Println("Invalid Password. Cognos also returns this error randomly sometimes?")
-			// this still indicates failure and will trigger a retry
-			return false
+			// provide a bit of explination for this one, as it can be misleading
+			panic("Invalid Password. Cognos also returns this error randomly sometimes?")
 		} else if resp.StatusCode != 200 {
 			panic("Error from Cognos while logging on: " + resp.Status)
 		}
