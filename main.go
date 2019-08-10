@@ -241,7 +241,16 @@ func (c CognosInstance) Request(method string, link string, reqBody string) (res
 	jgh.PanicOnErr(err)
 	defer c.httpLockPool.Release(1)
 
-	success, _ := jgh.Try(int(c.RetryDelay), c.RetryCount, true, "", func() bool {
+	// it never makes sense to have a try count of 0, so we ask the user
+	// for retry count and convert it
+	var tryCount int
+	if c.RetryCount < 0 {
+		tryCount = -1
+	} else {
+		tryCount = c.RetryCount + 1
+	}
+
+	success, _ := jgh.Try(int(c.RetryDelay), tryCount, true, "", func() bool {
 		// make an io.reader if we have post data
 		var reqBodyReader io.Reader
 		if len(reqBody) > 0 {
