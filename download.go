@@ -21,25 +21,25 @@ func (c CognosInstance) DownloadReportCSV(id string) string {
 
 		// when we re-check if the report is done we need to send along some post
 		// data to identify the report. The list here is stolen from scottorgan
-		var valuesToSend url.Values
-		valuesToSend.Add("b_action", findJSONValueInPage(respHTML, "b_action"))
-		valuesToSend.Add("cv.actionState", findJSONValueInPage(respHTML, "m_sActionState"))
-		valuesToSend.Add("cv.catchLogOnFault", "true")
-		valuesToSend.Add("cv.id", findJSONValueInPage(respHTML, "cv.id"))
-		valuesToSend.Add("cv.objectPermissions", findJSONValueInPage(respHTML, "cv.objectPermissions"))
-		valuesToSend.Add("cv.responseFormat", "data")
-		valuesToSend.Add("cv.showFaultPage", "true")
-		valuesToSend.Add("executionParameters", findJSONValueInPage(respHTML, "m_sParameters"))
-		valuesToSend.Add("m_tracking", findJSONValueInPage(respHTML, "m_sTracking"))
-		valuesToSend.Add("ui.action", "wait")
-		valuesToSend.Add("ui.cafcontextid", findJSONValueInPage(respHTML, "m_sCAFContextid"))
-		valuesToSend.Add("ui.conversation", findJSONValueInPage(respHTML, "m_sConversation"))
-		valuesToSend.Add("ui.object", findJSONValueInPage(respHTML, "ui.object"))
-		valuesToSend.Add("ui.objectClass", findJSONValueInPage(respHTML, "ui.objectClass"))
-		valuesToSend.Add("ui.primaryAction", findJSONValueInPage(respHTML, "ui.primaryAction"))
+		valuesToSend := make(url.Values)
+		valuesToSend.Set("b_action", findJSONValueInPage(respHTML, "b_action"))
+		valuesToSend.Set("cv.actionState", findJSONValueInPage(respHTML, "m_sActionState"))
+		valuesToSend.Set("cv.catchLogOnFault", "true")
+		valuesToSend.Set("cv.id", findJSONValueInPage(respHTML, "cv.id"))
+		valuesToSend.Set("cv.objectPermissions", findJSONValueInPage(respHTML, "cv.objectPermissions"))
+		valuesToSend.Set("cv.responseFormat", "data")
+		valuesToSend.Set("cv.showFaultPage", "true")
+		valuesToSend.Set("executionParameters", findJSONValueInPage(respHTML, "m_sParameters"))
+		valuesToSend.Set("m_tracking", findJSONValueInPage(respHTML, "m_sTracking"))
+		valuesToSend.Set("ui.action", "wait")
+		valuesToSend.Set("ui.cafcontextid", findJSONValueInPage(respHTML, "m_sCAFContext"))
+		valuesToSend.Set("ui.conversation", findJSONValueInPage(respHTML, "m_sConversation"))
+		valuesToSend.Set("ui.object", findJSONValueInPage(respHTML, "ui.object"))
+		valuesToSend.Set("ui.objectClass", findJSONValueInPage(respHTML, "ui.objectClass"))
+		valuesToSend.Set("ui.primaryAction", findJSONValueInPage(respHTML, "ui.primaryAction"))
 
 		postData := valuesToSend.Encode()
-		respHTML = c.Request("POST", "", postData)
+		respHTML = c.Request("POST", "/ibmcognos/cgi-bin/cognos.cgi", postData)
 	}
 
 	downloadLinkRegex := regexp.MustCompile(`var sURL = '([^']+)';`)
