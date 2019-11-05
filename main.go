@@ -129,6 +129,7 @@ func MakeInstance(
 func (c CognosInstance) loginLink() string {
 	return "/ibmcognos/cgi-bin/cognos.cgi" +
 		"?dsn=" + c.DSN +
+		"&spi_db_name=" + c.DSN +
 		"&CAMNamespace=" + c.Namespace +
 		"&b_action=xts.run" +
 		"&m=portal/cc.xts" +
