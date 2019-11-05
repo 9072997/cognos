@@ -155,38 +155,6 @@ func reportLinkFromID(id string) string {
 		"&run.prompt=false"
 }
 
-// BUG(jon): dosen't support "my folders" unless you specify the username
-// BUG(jon): this is unused and untested, but seems like it might be usefull one day (tm)
-func reportIDFromPath(path []string) (id string) {
-	// check that the path is long enough
-	if len(path) < 2 {
-		panic(`A report path must contain at least a user (or "public") and a report name`)
-	}
-
-	// the first path element should be either a username
-	// (ex: 0401jpenn) or "public"
-	if path[0] == "public" {
-		// this one has a leading slash
-		id = "/content"
-	} else {
-		// no leading slash
-		id = `CAMID("esp:a:` + cognosEscape(path[0]) + `")`
-	}
-
-	// The first element is user. The last is report. Everything
-	// inbetween is folders. We handle folders here.
-	folderNames := path[1 : len(path)-1]
-	for _, folderName := range folderNames {
-		id += "/folder[@name='" + cognosEscape(folderName) + "']"
-	}
-
-	// the last path element is report
-	reportName := path[len(path)-1]
-	id += "/report[@name='" + cognosEscape(reportName) + "']"
-
-	return id
-}
-
 // FolderEntryFromPath returns a folderEntry object representing whatever is
 // at path. Path is a sloce of strings. The first string should be either "public"
 // or "~" for public folders or my folders. Each string after that should represent
