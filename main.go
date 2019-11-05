@@ -32,6 +32,7 @@ type CognosInstance struct {
 	User         string
 	Pass         string
 	URL          string
+	Namespace    string
 	DSN          string
 	RetryDelay   uint
 	RetryCount   int
@@ -73,6 +74,7 @@ func (t FolderEntryType) MarshalJSON() ([]byte, error) {
 // user is the user used to connect to Cognos (ex: APSCN\0401jpenn).
 // This value also changes which "my folders" folder ~ points to.
 // url is the base URL of the cognos server (ex: https://adecognos.arkansas.gov).
+// namespace is the first thing you choose when signing in to Cognos.
 // I don't totally know what dsn is, but mine is bentonvisms.
 // If you open cognos in eschool and view source, you can see this value in the URL for the iframe.
 // There is a diffrent one for eschool and e-finance.
@@ -83,11 +85,18 @@ func (t FolderEntryType) MarshalJSON() ([]byte, error) {
 // Polling unfinished reports is unaffected by this.
 // httpTimeout is the number seconds before giving up on a Cognos HTTP request.
 // concurrentRequests limits the maximum number of requests going at once.
-func MakeInstance(user, pass, url, dsn string, retryDelay uint, retryCount int, httpTimeout uint, concurrentRequests uint) (c CognosInstance) {
+func MakeInstance(
+	user, pass, url, namespace, dsn string,
+	retryDelay uint,
+	retryCount int,
+	httpTimeout uint,
+	concurrentRequests uint,
+) (c CognosInstance) {
 	c = CognosInstance{
 		User:         user,
 		Pass:         pass,
 		URL:          url,
+		Namespace:    namespace,
 		DSN:          dsn,
 		RetryDelay:   retryDelay,
 		RetryCount:   retryCount,
@@ -120,7 +129,7 @@ func MakeInstance(user, pass, url, dsn string, retryDelay uint, retryCount int, 
 func (c CognosInstance) loginLink() string {
 	return "/ibmcognos/cgi-bin/cognos.cgi" +
 		"?dsn=" + c.DSN +
-		"&CAMNamespace=esp" +
+		"&CAMNamespace=" + c.Namespace +
 		"&b_action=xts.run" +
 		"&m=portal/cc.xts" +
 		"&gohome="
