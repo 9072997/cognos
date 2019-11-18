@@ -13,12 +13,8 @@ import (
 func (c CognosInstance) DownloadReportCSV(id string) string {
 	respHTML := c.Request("GET", reportLinkFromID(id), "")
 
-	// loop untill the report is finished. Sometimes the report is fast
-	// and we do this loop 0 times
-	for strings.Contains(respHTML, `"m_sStatus": "working"`) {
-		// Wait a bit and try it again.
-		time.Sleep(time.Second * time.Duration(c.RetryDelay))
-
+	// if the report isn't finished we need to poll to see when it is
+	if strings.Contains(respHTML, `"m_sStatus": "working"`) {
 		// when we re-check if the report is done we need to send along some post
 		// data to identify the report. The list here is stolen from scottorgan
 		valuesToSend := make(url.Values)
@@ -37,9 +33,17 @@ func (c CognosInstance) DownloadReportCSV(id string) string {
 		valuesToSend.Set("ui.object", findJSONValueInPage(respHTML, "ui.object"))
 		valuesToSend.Set("ui.objectClass", findJSONValueInPage(respHTML, "ui.objectClass"))
 		valuesToSend.Set("ui.primaryAction", findJSONValueInPage(respHTML, "ui.primaryAction"))
-
 		postData := valuesToSend.Encode()
-		respHTML = c.Request("POST", "/ibmcognos/cgi-bin/cognos.cgi", postData)
+
+		// if either of these strings is present, the report is not finished
+		wStr1 := `"m_sStatus": "working"`
+		wStr2 := `&quot;m_sStatus&quot;: &quot;stillWorking&quot;`
+		// loop until neither string is present
+		for strings.Contains(respHTML, wStr1) || strings.Contains(respHTML, wStr2) {
+			time.Sleep(time.Second * time.Duration(c.RetryDelay))
+			respHTML = c.Request("POST", "/ibmcognos/cgi-bin/cognos.cgi", postData)
+		}
+
 	}
 
 	downloadLinkRegex := regexp.MustCompile(`var sURL = '([^']+)';`)
